@@ -3,10 +3,10 @@ from tkinter import Tk, Canvas, messagebox, Label
 class Connect4:
     column_count = 7
     row_count = 6
-    left_top_offset = 30
-    spacing = 10
+    left_top_offset = 30    
     column_width = 50
     piece_diameter = 40
+    spacing = column_width - piece_diameter
     canvas_width = 400
     canvas_height = 350
     background = "blue"
@@ -25,6 +25,7 @@ class Connect4:
 
         self.canvas = Canvas(self.root, width = self.canvas_width, height = self.canvas_height, bg = self.background)
         self.canvas.bind('<Button-1>', self.on_click)
+        self.canvas.bind('<Motion>', self.on_hover)
         self.canvas.pack()       
         
         self.draw_board()
@@ -34,9 +35,26 @@ class Connect4:
 
         self.current_player = self.player1
         self.turn_label = Label(self.root, text=f"Current Player: {self.current_player.name}", font = ('Arial', 14), fg = 'black')
-        self.turn_label.pack(side='bottom')        
+        self.turn_label.pack(side='bottom')    
+
+        self.hover_column = 0    
+        self.column_shadow = None
         
         self.root.mainloop()
+
+    def on_hover(self, event):        
+        new_hover_column = self.get_current_column(event.x)
+
+        if new_hover_column != self.hover_column:
+            print("column: " + str(self.get_current_column(event.x)))
+            self.canvas.delete(self.column_shadow)
+            self.hover_column = new_hover_column
+            x1 = self.hover_column * self.column_width + self.left_top_offset
+            y1 = self.left_top_offset
+            x2 = x1 + self.piece_diameter
+            y2 = self.left_top_offset + self.row_count * self.piece_diameter + (self.row_count - 1) * self.spacing
+            self.column_shadow = self.canvas.create_rectangle(x1, y1, x2, y2, outline="grey")
+        
 
     # create a connect4 for board, 6 row by 7 columns
     def draw_board(self):
@@ -86,7 +104,7 @@ class Connect4:
 
     # get column from user's click position
     def get_current_column(self, x):
-        column = (x - self.left_top_offset) // self.column_width
+        column = (x - self.left_top_offset + int(self.spacing/2)) // self.column_width
         if column > (self.column_count - 1):
             column = self.column_count -1
         if column < 0:
