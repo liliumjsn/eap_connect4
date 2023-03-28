@@ -1,6 +1,8 @@
 from tkinter import Tk, Canvas, messagebox, Label
 
 class Connect4:
+    column_count = 7
+    row_count = 6
     left_top_offset = 30
     spacing = 10
     column_width = 50
@@ -38,7 +40,7 @@ class Connect4:
 
     # create a connect4 for board, 6 row by 7 columns
     def draw_board(self):
-        self.board = [[' ' for j in range(7)] for i in range(6)]
+        self.board = [[' ' for j in range(self.column_count)] for i in range(self.row_count)]
         for i in range(6):
             for j in range(7):
                 x1 = j * self.column_width + self.left_top_offset
@@ -84,7 +86,12 @@ class Connect4:
 
     # get column from user's click position
     def get_current_column(self, x):
-        return (x - self.left_top_offset) // self.column_width
+        column = (x - self.left_top_offset) // self.column_width
+        if column > (self.column_count - 1):
+            column = self.column_count -1
+        if column < 0:
+            column = 0
+        return column
     
     # get available row for the piece 
     def get_current_row(self, column):
