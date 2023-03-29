@@ -9,6 +9,8 @@ class Connect4:
     left_top_offset = 30    
     # width of each column
     column_width = 50
+    # 4 pieces for connect4
+    piece_winning_count = 4
     # diameter of each piece
     piece_diameter = 40
     # spacing between pieces
@@ -133,7 +135,7 @@ class Connect4:
             messagebox.showinfo("Game Over", f"{winner.name} wins!")
             self.new_game(self.Player("Red Player", "red", "human"), self.Player("Yellow Player", "yellow", "human"))       
         # if there is a no winner and the board is full it is a tie
-        elif all(self.board[i][j] != ' ' for i in range(6) for j in range(7)):
+        elif all(self.board[i][j] != ' ' for i in range(self.row_count) for j in range(self.column_count)):
             messagebox.showinfo("Game Over", "It's a tie!")
             self.new_game(self.Player("Red Player", "red", "human"), self.Player("Yellow Player", "yellow", "human"))       
         # if there is a no winner and the board is not full we continue to play
@@ -173,7 +175,7 @@ class Connect4:
     def get_row_available(self, column):
         # from index 5 (wich corresponds to the bottom row) until index 0, 
         # check to see if there is an empty row and return it's index
-        for i in range(self.row_count-1, -1, -1):
+        for i in range(self.row_count - 1, -1, -1):
             if self.board[i][column] == ' ':
                 return i
        
@@ -182,25 +184,25 @@ class Connect4:
         # check rows for winner
         for i in range(6):
             for j in range(4):
-                if self.board[i][j] == self.board[i][j+1] == self.board[i][j+2] == self.board[i][j+3] != ' ':
+                if self.board[i][j] == self.board[i][j + 1] == self.board[i][j + 2] == self.board[i][j + 3] != ' ':
                     return self.board[i][j]
                 
         # check columns for winner
         for i in range(3):
             for j in range(7):
-                if self.board[i][j] == self.board[i+1][j] == self.board[i+2][j] == self.board[i+3][j] != ' ':
+                if self.board[i][j] == self.board[i + 1][j] == self.board[i + 2][j] == self.board[i + 3][j] != ' ':
                     return self.board[i][j]
                 
         # check diagonals (top-left to bottom-right) for winner
         for i in range(3):
             for j in range(4):
-                if self.board[i][j] == self.board[i+1][j+1] == self.board[i+2][j+2] == self.board[i+3][j+3] != ' ':
+                if self.board[i][j] == self.board[i + 1][j + 1] == self.board[i+2][j+2] == self.board[i + 3][j + 3] != ' ':
                     return self.board[i][j]
         
         # check diagonals (top-right to bottom-left) for winner
         for i in range(3):
             for j in range(3, 7):
-                if self.board[i][j] == self.board[i+1][j-1] == self.board[i+2][j-2] == self.board[i+3][j-3] != ' ':
+                if self.board[i][j] == self.board[i + 1][j - 1] == self.board[i + 2][j - 2] == self.board[i + 3][j - 3] != ' ':
                     return self.board[i][j]
                 
         return None
