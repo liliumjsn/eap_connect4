@@ -20,11 +20,13 @@ class Connect4:
     # background color of canvas
     canvas_background = "blue"
 
-    # create Player class to hold name and color
+    # create Player class to hold name, color and type ("human" or "cpu")
     class Player:
-        def __init__(self, name, color):
+        def __init__(self, name, color, type):
             self.name = name
             self.color = color
+            self.type = type
+            # TO-DO add score attribute?
 
     # initialize variables
     def __init__(self):
@@ -34,38 +36,62 @@ class Connect4:
         self.root.title("Connect4")
         # disable resizing of the window
         self.root.resizable(False, False) 
-
         # create canvas graphical object that will be used as board
         self.canvas = Canvas(self.root, width = self.canvas_width, height = self.canvas_height, bg = self.canvas_background)
+        # create the user interface (buttons, labels, etc.)
+        self.create_ui()
+        # create new game
+        self.new_game(self.Player("Red Player", "red", "human"), self.Player("Yellow Player", "yellow", "human"))           
+        # start tkinter mainloop
+        self.root.mainloop()
+
+    # create the user interface (buttons, labels, etc.)
+    # here we can add a score board, player names' input and more
+    def create_ui(self):
         # create canvas click event that captures the mouse click
         self.canvas.bind('<Button-1>', self.canvas_on_click)
         # create canvas motion event that captures the mouse movement
         self.canvas.bind('<Motion>', self.canvas_on_hover)
-        self.canvas.pack()       
-        
+        self.canvas.pack()
+        # create player's turn label
+        self.player_current_label = Label(self.root, text = "", font = ('Arial', 14), fg = 'black')        
+        self.player_current_label.pack(side='bottom')
+
+    # create a new game
+    def new_game(self, player1, player2):
+        # clear canvas
+        self.canvas.delete('all')
         # draw game board on canvas
         self.draw_board()
-
         # create player1 object
-        self.player1 = self.Player("Red Player", "red")
+        self.player1 = player1
         # create player2 object
-        self.player2 = self.Player("Yellow Player", "yellow")
+        self.player2 = player2
         # set first player as player1
         self.player_current = self.player1
-        # create player's turn label
-        self.player_current_label = Label(self.root, text=f"Current Player: {self.player_current.name}", font = ('Arial', 14), fg = 'black')
-        self.player_current_label.pack(side='bottom')    
-
+        # update current player's label
+        self.player_current_label.config(text = f"Current Player: {self.player_current.name}")
         # initialize selected column
-        self.column_selected = 0    
-        
-        self.root.mainloop()
+        self.column_selected = 0 
+
+    # draw a connect4 for board, 6 row by 7 columns
+    def draw_board(self):
+        # create a nested list of 2 dimensions to hold the board of the game
+        # this is where the data of each piece will be saved
+        self.board = [[' ' for j in range(self.column_count)] for i in range(self.row_count)]
+        # generate 6x7 white circles on the canvas background to create a connect4 game board
+        for i in range(self.row_count):
+            for j in range(self.column_count):
+                x1 = j * self.column_width + self.left_top_offset
+                y1 = i * self.column_width + self.left_top_offset
+                x2 = x1 + self.piece_diameter
+                y2 = y1 + self.piece_diameter
+                self.canvas.create_oval(x1, y1, x2, y2, fill='white')
 
     # mouse motion event handler
     def canvas_on_hover(self, event):      
         # capture mouse X coordinate and get the column that coresponds to this X
         new_column_selected = self.get_column_selected(event.x)
-
         # check if mouse is over new column
         if new_column_selected != self.column_selected:
             #print("column: " + str(self.get_current_column(event.x)))
@@ -81,22 +107,7 @@ class Connect4:
             x2 = x1 + self.piece_diameter + self.piece_spacing
             y2 = self.left_top_offset + self.row_count * self.piece_diameter + (self.row_count - 1) * self.piece_spacing + self.piece_spacing/2
             # create new column_selected_effect rectangle
-            self.column_selected_effect = self.canvas.create_rectangle(x1, y1, x2, y2, outline="grey")
-        
-
-    # create a connect4 for board, 6 row by 7 columns
-    def draw_board(self):
-        # create a nested list of 2 dimensions to hold the board of the game
-        # this is where the data of each piece will be saved
-        self.board = [[' ' for j in range(self.column_count)] for i in range(self.row_count)]
-        # generate 6x7 white circles on the canvas background to create a connect4 game board
-        for i in range(6):
-            for j in range(7):
-                x1 = j * self.column_width + self.left_top_offset
-                y1 = i * self.column_width + self.left_top_offset
-                x2 = x1 + self.piece_diameter
-                y2 = y1 + self.piece_diameter
-                self.canvas.create_oval(x1, y1, x2, y2, fill='white')
+            self.column_selected_effect = self.canvas.create_rectangle(x1, y1, x2, y2, outline="grey")       
 
     # mouse click event handler
     def canvas_on_click(self, event):
@@ -108,24 +119,26 @@ class Connect4:
             return      
           
         # get the first available row to place a piece on the selected column
-        row = self.get_row_available(column_clicked)      
+        row_available = self.get_row_available(column_clicked)      
         # place a piece to the selected column and row
-        self.place_piece(row, column_clicked)
-
+        self.place_piece(row_available, column_clicked, self.player_current)
+        self.handle_turn()
+        
+    # handle the outcome of each turn
+    def handle_turn(self):
         # check if there is a winner
         winner = self.get_winner()
-        
-        # if there is a winner show it's name on a messagebox and exit
+        # if there is a winner show it's name on a messagebox create new game
         if winner is not None:
             messagebox.showinfo("Game Over", f"{winner.name} wins!")
-            self.root.destroy()
+            self.new_game(self.Player("Red Player", "red", "human"), self.Player("Yellow Player", "yellow", "human"))       
         # if there is a no winner and the board is full it is a tie
         elif all(self.board[i][j] != ' ' for i in range(6) for j in range(7)):
             messagebox.showinfo("Game Over", "It's a tie!")
-            self.root.destroy()
+            self.new_game(self.Player("Red Player", "red", "human"), self.Player("Yellow Player", "yellow", "human"))       
         # if there is a no winner and the board is not full we continue to play
         else:
-            # switch playr's turn
+            # switch player's turn
             if self.player_current == self.player1:
                 self.player_current = self.player2
             else:
@@ -133,8 +146,8 @@ class Connect4:
             # update current player's label
             self.player_current_label.config(text = f"Current Player: {self.player_current.name}")
 
-    # place piece to [row, column] position and update turn
-    def place_piece(self, row, column):      
+    # place a player's piece to [row, column] position
+    def place_piece(self, row, column, player):      
         # generate a circle using the current player's color
         x1 = column * self.column_width + self.left_top_offset
         y1 = row * self.column_width + self.left_top_offset
@@ -143,7 +156,7 @@ class Connect4:
         color = self.player_current.color
         self.canvas.create_oval(x1, y1, x2, y2, fill = color, tags = 'disk')
         # by placing a piece we insert a player object in the board's nested list
-        self.board[row][column] = self.player_current
+        self.board[row][column] = player
 
     # get column from user's click position
     def get_column_selected(self, x):
@@ -160,7 +173,7 @@ class Connect4:
     def get_row_available(self, column):
         # from index 5 (wich corresponds to the bottom row) until index 0, 
         # check to see if there is an empty row and return it's index
-        for i in range(5, -1, -1):
+        for i in range(self.row_count-1, -1, -1):
             if self.board[i][column] == ' ':
                 return i
        
